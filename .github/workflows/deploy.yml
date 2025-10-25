@@ -1,9 +1,16 @@
+
 name: Build and Deploy Frontend
 
 on:
   push:
     branches:
       - main
+
+# Ensure the workflow has explicit write permissions so the GITHUB_TOKEN can push
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -12,6 +19,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # persist the token so later steps can push commits/branches
+          persist-credentials: true
+          fetch-depth: 0
 
       - name: Use Node.js 18
         uses: actions/setup-node@v4
@@ -30,5 +41,10 @@ jobs:
         with:
           publish_dir: ./dist
           publish_branch: gh-pages
-          # Use the default GITHUB_TOKEN to push to gh-pages
+          # Prefer the repo-scoped GITHUB_TOKEN; if your workflow runs from a fork
+          # or your organization restricts the GITHUB_TOKEN privileges, create a
+          # personal access token (repo:public_repo or repo scope) and store it in
+          # repository secret `GH_PAGES_TOKEN`. The action accepts both and uses
+          # whichever is available.
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          personal_token: ${{ secrets.GH_PAGES_TOKEN }}
